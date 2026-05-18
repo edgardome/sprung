@@ -15,8 +15,8 @@ export const Metronome: React.FC = () => {
     beatsPerMeasure,
   })
 
-  const handleStart = useCallback(async () => {
-    await initAudio()
+  const handleStart = useCallback(() => {
+    initAudio()
     start()
   }, [start])
 

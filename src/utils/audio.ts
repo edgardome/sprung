@@ -2,7 +2,7 @@ let audioCtx: AudioContext | null = null
 let clickBuf: AudioBuffer | null = null
 let accentBuf: AudioBuffer | null = null
 
-function getCtx(): AudioContext {
+function ensureCtx(): AudioContext {
   if (!audioCtx) {
     const Ctor = window.AudioContext || (window as any).webkitAudioContext
     audioCtx = new Ctor()
@@ -11,7 +11,7 @@ function getCtx(): AudioContext {
 }
 
 function buildBuffers(): void {
-  const ctx = getCtx()
+  const ctx = audioCtx!
   if (clickBuf) return
 
   const sr = ctx.sampleRate
@@ -31,20 +31,33 @@ function buildBuffers(): void {
   }
 }
 
-export async function initAudio(): Promise<void> {
-  const ctx = getCtx()
+function playBuf(buf: AudioBuffer): void {
+  const ctx = audioCtx!
+  const src = ctx.createBufferSource()
+  src.buffer = buf
+  src.connect(ctx.destination)
+  src.start(0)
+}
+
+export function initAudio(): void {
+  const ctx = ensureCtx()
   if (ctx.state === 'suspended') {
-    await ctx.resume()
+    ctx.resume()
   }
   buildBuffers()
+  if (clickBuf && ctx.state !== 'closed') {
+    playBuf(clickBuf)
+  }
 }
 
 export function playClick(accent: boolean = false): void {
   const ctx = audioCtx
-  if (!ctx || ctx.state !== 'running') return
-
-  const src = ctx.createBufferSource()
-  src.buffer = accent ? accentBuf : clickBuf
-  src.connect(ctx.destination)
-  src.start(ctx.currentTime)
+  if (!ctx) return
+  if (ctx.state === 'suspended') {
+    ctx.resume()
+    return
+  }
+  if (ctx.state !== 'running') return
+  if (!clickBuf || !accentBuf) return
+  playBuf(accent ? accentBuf : clickBuf)
 }

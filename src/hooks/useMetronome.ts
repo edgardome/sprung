@@ -6,7 +6,7 @@ export function useMetronome(config: MetronomeConfig) {
   const [isRunning, setIsRunning] = useState(false)
   const [currentBeat, setCurrentBeat] = useState(0)
   const [flashTrigger, setFlashTrigger] = useState(0)
-  const intervalRef = useRef<number | null>(null)
+  const timeoutRef = useRef<number | null>(null)
   const beatRef = useRef(0)
 
   const intervalMs = 60_000 / config.bpm
@@ -19,30 +19,28 @@ export function useMetronome(config: MetronomeConfig) {
     beatRef.current += 1
   }, [config.beatsPerMeasure])
 
+  const schedule = useCallback(() => {
+    tick()
+    timeoutRef.current = window.setTimeout(schedule, intervalMs)
+  }, [intervalMs, tick])
+
   const start = useCallback(() => {
     beatRef.current = 0
     setCurrentBeat(0)
     setIsRunning(true)
     tick()
-    intervalRef.current = window.setInterval(tick, intervalMs)
-  }, [intervalMs, tick])
+    timeoutRef.current = window.setTimeout(schedule, intervalMs)
+  }, [intervalMs, tick, schedule])
 
   const stop = useCallback(() => {
-    if (intervalRef.current !== null) {
-      clearInterval(intervalRef.current)
-      intervalRef.current = null
+    if (timeoutRef.current !== null) {
+      clearTimeout(timeoutRef.current)
+      timeoutRef.current = null
     }
     setIsRunning(false)
     setCurrentBeat(0)
     beatRef.current = 0
   }, [])
-
-  useEffect(() => {
-    if (isRunning) {
-      stop()
-      start()
-    }
-  }, [config.bpm, config.beatsPerMeasure])
 
   useEffect(() => () => stop(), [stop])
 
