@@ -1,0 +1,12 @@
+- generic [ref=e4]:
+  - heading "SPRUNG" [level=1] [ref=e5]
+  - paragraph [ref=e6]: Plyometric Reaction Trainer
+  - generic [ref=e7]:
+    - button "🎯 Cue Trainer Configure visual cues — arrows, colors, numbers — and train your reactions." [ref=e8] [cursor=pointer]:
+      - generic [ref=e9]: 🎯
+      - generic [ref=e10]: Cue Trainer
+      - generic [ref=e11]: Configure visual cues — arrows, colors, numbers — and train your reactions.
+    - button "🥁 Metronome Set your tempo and follow the beat for cadence-based plyometric drills." [ref=e12] [cursor=pointer]:
+      - generic [ref=e13]: 🥁
+      - generic [ref=e14]: Metronome
+      - generic [ref=e15]: Set your tempo and follow the beat for cadence-based plyometric drills.

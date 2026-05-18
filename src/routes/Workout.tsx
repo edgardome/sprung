@@ -94,7 +94,7 @@ export const Workout: React.FC = () => {
       {!started && !finished && (
         <div className="workout-ready">
           <p className="workout-ready-text">
-            {sequence.length} cues ready. Press Start.
+            {sequence.length} workouts ready. Press Start.
           </p>
           <button className="btn btn-primary btn-lg" onClick={handleStart}>
             ▶ Start
@@ -118,7 +118,7 @@ export const Workout: React.FC = () => {
       {finished && (
         <div className="workout-done">
           <p className="workout-done-text">Workout Complete!</p>
-          <p className="workout-done-sub">{sequence.length} cues completed</p>
+          <p className="workout-done-sub">{sequence.length} workouts completed</p>
           <div className="workout-done-actions">
             <button className="btn btn-primary" onClick={handleStart}>
               🔄 Repeat

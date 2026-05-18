@@ -69,7 +69,7 @@ export const Configure: React.FC = () => {
           onClick={handleStart}
           disabled={total === 0}
         >
-          ▶ Start ({total} cues)
+          ▶ Start ({total})
         </button>
       </div>
     </div>

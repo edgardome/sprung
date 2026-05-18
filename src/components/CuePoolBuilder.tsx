@@ -253,7 +253,7 @@ export const CuePoolBuilder: React.FC<CuePoolBuilderProps> = ({
       )}
 
       <div className="pool-total">
-        Total cues: {total}
+        Total workouts: {total}
         {total === 0 && (
           <span className="pool-total-hint">
             {' '}— add arrows, colors, or numbers above
