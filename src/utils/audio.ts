@@ -2,10 +2,9 @@ let audioCtx: AudioContext | null = null
 let html5Audio: HTMLAudioElement | null = null
 let clickWavDataUri = ''
 
-// ── HTML5 Audio fallback ──────────────────────────────────────
 function buildWavDataUri(): string {
   const sr = 44100
-  const dur = 0.04
+  const dur = 0.025
   const len = Math.floor(sr * dur)
   const buf = new ArrayBuffer(44 + len * 2)
   const v = new DataView(buf)
@@ -19,8 +18,8 @@ function buildWavDataUri(): string {
 
   for (let i = 0; i < len; i++) {
     const t = i / sr
-    const env = Math.max(0, 1 - t / 0.03)
-    const sq = Math.sin(2 * Math.PI * 800 * t) > 0 ? 1 : -1
+    const env = Math.max(0, 1 - t / 0.015)
+    const sq = Math.sin(2 * Math.PI * 1000 * t) > 0 ? 1 : -1
     v.setInt16(44 + i * 2, sq * env * 0x4CCC, true)
   }
 
@@ -38,7 +37,6 @@ function getHtml5Audio(): HTMLAudioElement {
   return html5Audio
 }
 
-// ── Web Audio ─────────────────────────────────────────────────
 function getCtx(): AudioContext {
   if (!audioCtx) {
     const Ctor = window.AudioContext || (window as any).webkitAudioContext
@@ -61,14 +59,18 @@ export function playClick(accent: boolean = false): void {
     const now = ctx.currentTime
     const osc = ctx.createOscillator()
     const gain = ctx.createGain()
+
     osc.type = 'square'
     osc.frequency.value = accent ? 880 : 660
-    gain.gain.value = accent ? 0.5 : 0.35
+
+    gain.gain.setValueAtTime(accent ? 0.5 : 0.35, now)
+    gain.gain.linearRampToValueAtTime(0.001, now + 0.02)
+
     osc.connect(gain)
     gain.connect(ctx.destination)
+
     osc.start(now)
-    gain.gain.setValueAtTime(0, now + 0.04)
-    osc.stop(now + 0.05)
+    osc.stop(now + 0.025)
   } else {
     const a = getHtml5Audio()
     a.currentTime = 0
