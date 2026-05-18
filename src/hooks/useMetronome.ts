@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef, useEffect } from 'react'
-import { playClick, resumeAudio } from '../utils/audio'
+import { playClick } from '../utils/audio'
 import type { MetronomeConfig } from '../types'
 
 export function useMetronome(config: MetronomeConfig) {
@@ -20,7 +20,6 @@ export function useMetronome(config: MetronomeConfig) {
   }, [config.beatsPerMeasure])
 
   const start = useCallback(() => {
-    resumeAudio()
     beatRef.current = 0
     setCurrentBeat(0)
     setIsRunning(true)
@@ -43,7 +42,6 @@ export function useMetronome(config: MetronomeConfig) {
       stop()
       start()
     }
-    // restart when config changes while running
   }, [config.bpm, config.beatsPerMeasure])
 
   useEffect(() => () => stop(), [stop])

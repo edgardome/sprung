@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useMetronome } from '../hooks/useMetronome'
 import { MetronomeControls } from '../components/MetronomeControls'
 import { BeatIndicator } from '../components/BeatIndicator'
-import { resumeAudio } from '../utils/audio'
+import { initAudio } from '../utils/audio'
 
 export const Metronome: React.FC = () => {
   const navigate = useNavigate()
@@ -15,8 +15,8 @@ export const Metronome: React.FC = () => {
     beatsPerMeasure,
   })
 
-  const handleStart = useCallback(() => {
-    resumeAudio()
+  const handleStart = useCallback(async () => {
+    await initAudio()
     start()
   }, [start])
 

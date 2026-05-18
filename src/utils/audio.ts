@@ -7,8 +7,23 @@ function getAudioContext(): AudioContext {
   return audioCtx
 }
 
-export function playClick(accent: boolean = false): void {
+export async function initAudio(): Promise<void> {
   const ctx = getAudioContext()
+  if (ctx.state === 'suspended') {
+    await ctx.resume()
+  }
+}
+
+export function resumeAudio(): void {
+  if (audioCtx && audioCtx.state === 'suspended') {
+    audioCtx.resume()
+  }
+}
+
+export function playClick(accent: boolean = false): void {
+  const ctx = audioCtx
+  if (!ctx || ctx.state !== 'running') return
+
   const now = ctx.currentTime
 
   const osc = ctx.createOscillator()
@@ -25,11 +40,4 @@ export function playClick(accent: boolean = false): void {
 
   osc.start(now)
   osc.stop(now + 0.05)
-}
-
-export function resumeAudio(): void {
-  const ctx = getAudioContext()
-  if (ctx.state === 'suspended') {
-    ctx.resume()
-  }
 }
