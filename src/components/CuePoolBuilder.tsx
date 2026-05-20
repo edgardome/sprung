@@ -1,7 +1,6 @@
-import React, { useMemo, useState, useEffect, useCallback } from 'react'
+import React, { useMemo } from 'react'
 import type { CueConfigItem, ArrowDirection, MixedMode, Cue } from '../types'
 import { COLOR_PALETTE } from '../types'
-import { shuffle } from '../utils/shuffle'
 
 interface CuePoolBuilderProps {
   items: CueConfigItem[]
@@ -22,37 +21,27 @@ const ARROW_OPTIONS: { dir: ArrowDirection; label: string; symbol: string }[] = 
   { dir: 'right', label: 'Right', symbol: '➡' },
 ]
 
-function getCount(items: CueConfigItem[], kind: string, value: string): number {
-  return items.find((i) => i.kind === kind && i.value === value)?.count ?? 0
+function isActive(items: CueConfigItem[], kind: string, value: string): boolean {
+  return items.some((i) => i.kind === kind && i.value === value)
 }
 
 function CueOption({
   label,
-  count,
+  active,
   preview,
   onClick,
-  onRemove,
 }: {
   label: string
-  count: number
+  active: boolean
   preview?: React.ReactNode
   onClick: () => void
-  onRemove: () => void
 }) {
   return (
-    <div className={`cue-option ${count > 0 ? 'cue-option--active' : ''}`}>
+    <div className={`cue-option ${active ? 'cue-option--active' : ''}`}>
       <button className="cue-option-btn" onClick={onClick}>
         {preview}
         <span>{label}</span>
       </button>
-      {count > 0 && (
-        <span className="cue-option-badge">
-          <button className="cue-option-minus" onClick={onRemove}>
-            −
-          </button>
-          <span className="cue-option-count">{count}</span>
-        </span>
-      )}
     </div>
   )
 }
@@ -87,69 +76,37 @@ export const CuePoolBuilder: React.FC<CuePoolBuilderProps> = ({
   onItemsChange,
   onMixedModeChange,
 }) => {
-  const [isShuffled, setIsShuffled] = useState(false)
-
-  const addOne = (kind: string, value: string) => {
+  const toggleOne = (kind: string, value: string) => {
     const exists = items.find((i) => i.kind === kind && i.value === value)
     if (exists) {
-      onItemsChange(
-        items.map((i) =>
-          i.id === exists.id ? { ...i, count: i.count + 1 } : i,
-        ),
-      )
+      onItemsChange(items.filter((i) => i.id !== exists.id))
     } else {
       onItemsChange([...items, { id: nextId(), kind: kind as CueConfigItem['kind'], value, count: 1 }])
-    }
-  }
-
-  const removeOne = (kind: string, value: string) => {
-    const item = items.find((i) => i.kind === kind && i.value === value)
-    if (!item) return
-    if (item.count <= 1) {
-      onItemsChange(items.filter((i) => i.id !== item.id))
-    } else {
-      onItemsChange(
-        items.map((i) =>
-          i.id === item.id ? { ...i, count: i.count - 1 } : i,
-        ),
-      )
     }
   }
 
   const filtered = items.filter(
     (i) => mixedMode === 'all' || i.kind === mixedMode,
   )
-  const total = filtered.reduce((s, i) => s + i.count, 0)
-
-  const fingerprint = filtered
-    .map((i) => `${i.kind}:${i.value}:${i.count}`)
-    .join('|')
-
-  useEffect(() => {
-    setIsShuffled(false)
-  }, [fingerprint])
+  const total = filtered.length
 
   const previewSequence = useMemo((): Cue[] => {
     const pool: Cue[] = []
     for (const item of filtered) {
-      for (let i = 0; i < item.count; i++) {
-        switch (item.kind) {
-          case 'arrow':
-            pool.push({ kind: 'arrow', value: item.value as ArrowDirection })
-            break
-          case 'color':
-            pool.push({ kind: 'color', value: item.value })
-            break
-          case 'number':
-            pool.push({ kind: 'number', value: Number(item.value) })
-            break
-        }
+      switch (item.kind) {
+        case 'arrow':
+          pool.push({ kind: 'arrow', value: item.value as ArrowDirection })
+          break
+        case 'color':
+          pool.push({ kind: 'color', value: item.value })
+          break
+        case 'number':
+          pool.push({ kind: 'number', value: Number(item.value) })
+          break
       }
     }
-    return isShuffled ? shuffle(pool) : pool
-  }, [filtered, isShuffled])
-
-  const reshuffle = useCallback(() => setIsShuffled(true), [])
+    return pool
+  }, [filtered])
 
   return (
     <div className="pool-builder">
@@ -176,18 +133,17 @@ export const CuePoolBuilder: React.FC<CuePoolBuilderProps> = ({
       </div>
 
       <div className="pool-section">
-        <h3 className="pool-section-title">⬆ Arrows</h3>
+        <h3 className="pool-section-title">Arrows</h3>
         <div className="pool-section-grid">
           {ARROW_OPTIONS.map((opt) => {
-            const cnt = getCount(items, 'arrow', opt.dir)
+            const act = isActive(items, 'arrow', opt.dir)
             return (
               <CueOption
                 key={opt.dir}
                 label={opt.label}
-                count={cnt}
+                active={act}
                 preview={<span className="cue-option-arrow">{opt.symbol}</span>}
-                onClick={() => addOne('arrow', opt.dir)}
-                onRemove={() => removeOne('arrow', opt.dir)}
+                onClick={() => toggleOne('arrow', opt.dir)}
               />
             )
           })}
@@ -195,23 +151,22 @@ export const CuePoolBuilder: React.FC<CuePoolBuilderProps> = ({
       </div>
 
       <div className="pool-section">
-        <h3 className="pool-section-title">🎨 Colors</h3>
+        <h3 className="pool-section-title">Colors</h3>
         <div className="pool-section-grid pool-section-grid--colors">
           {COLOR_PALETTE.map((c) => {
-            const cnt = getCount(items, 'color', c.hex)
+            const act = isActive(items, 'color', c.hex)
             return (
               <CueOption
                 key={c.hex}
                 label={c.name}
-                count={cnt}
+                active={act}
                 preview={
                   <span
                     className="cue-option-swatch"
                     style={{ backgroundColor: c.hex }}
                   />
                 }
-                onClick={() => addOne('color', c.hex)}
-                onRemove={() => removeOne('color', c.hex)}
+                onClick={() => toggleOne('color', c.hex)}
               />
             )
           })}
@@ -219,17 +174,16 @@ export const CuePoolBuilder: React.FC<CuePoolBuilderProps> = ({
       </div>
 
       <div className="pool-section">
-        <h3 className="pool-section-title">🔢 Numbers</h3>
+        <h3 className="pool-section-title">Numbers</h3>
         <div className="pool-section-grid pool-section-grid--numbers">
           {Array.from({ length: 20 }, (_, i) => i + 1).map((n) => {
-            const cnt = getCount(items, 'number', String(n))
+            const act = isActive(items, 'number', String(n))
             return (
               <CueOption
                 key={n}
                 label={String(n)}
-                count={cnt}
-                onClick={() => addOne('number', String(n))}
-                onRemove={() => removeOne('number', String(n))}
+                active={act}
+                onClick={() => toggleOne('number', String(n))}
               />
             )
           })}
@@ -240,9 +194,6 @@ export const CuePoolBuilder: React.FC<CuePoolBuilderProps> = ({
         <div className="pool-section pool-preview">
           <div className="pool-preview-header">
             <h3 className="pool-section-title">Sequence Preview</h3>
-            <button className="btn btn-sm" onClick={reshuffle}>
-              🔀 Shuffle
-            </button>
           </div>
           <div className="pool-preview-list">
             {previewSequence.map((cue, i) => (
@@ -253,7 +204,7 @@ export const CuePoolBuilder: React.FC<CuePoolBuilderProps> = ({
       )}
 
       <div className="pool-total">
-        Total workouts: {total}
+        {total} exercise type{total !== 1 ? 's' : ''} selected
         {total === 0 && (
           <span className="pool-total-hint">
             {' '}— add arrows, colors, or numbers above

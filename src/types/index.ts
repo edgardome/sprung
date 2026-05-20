@@ -51,4 +51,5 @@ export const COLOR_PALETTE = [
   { hex: '#ff8844', name: 'Orange' },
   { hex: '#8844ff', name: 'Purple' },
   { hex: '#44ffff', name: 'Cyan' },
+  { hex: '#ffffff', name: 'White' },
 ]

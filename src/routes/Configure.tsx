@@ -36,7 +36,7 @@ export const Configure: React.FC = () => {
   const activeItems = items.filter(
     (i) => mixedMode === 'all' || i.kind === mixedMode,
   )
-  const total = activeItems.reduce((s, i) => s + i.count, 0)
+  const total = activeItems.length
 
   return (
     <div className="configure">

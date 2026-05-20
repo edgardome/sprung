@@ -1,43 +1,30 @@
 import { useCallback, useMemo } from 'react'
 import type { ArrowDirection, ExerciseConfig, Cue } from '../types'
-import { shuffle } from '../utils/shuffle'
 
 export function useCueSequence(config: ExerciseConfig): {
-  sequence: Cue[]
+  pickRandom: () => Cue
   cueCount: number
-  regenerate: () => Cue[]
 } {
-  const buildSequence = useCallback((): Cue[] => {
-    const pool: Cue[] = []
-
-    for (const item of config.items) {
-      if (item.count <= 0) continue
-
-      if (config.mixedMode !== 'all' && item.kind !== config.mixedMode) continue
-
-      for (let i = 0; i < item.count; i++) {
-        switch (item.kind) {
-          case 'arrow':
-            pool.push({ kind: 'arrow', value: item.value as ArrowDirection })
-            break
-          case 'color':
-            pool.push({ kind: 'color', value: item.value })
-            break
-          case 'number':
-            pool.push({ kind: 'number', value: Number(item.value) })
-            break
-        }
-      }
-    }
-
-    return shuffle(pool)
+  const items = useMemo(() => {
+    return config.items.filter((item) => {
+      if (config.mixedMode !== 'all' && item.kind !== config.mixedMode)
+        return false
+      return true
+    })
   }, [config])
 
-  const sequence = useMemo(() => buildSequence(), [buildSequence])
+  const pickRandom = useCallback((): Cue => {
+    const idx = Math.floor(Math.random() * items.length)
+    const item = items[idx]
+    switch (item.kind) {
+      case 'arrow':
+        return { kind: 'arrow', value: item.value as ArrowDirection }
+      case 'color':
+        return { kind: 'color', value: item.value }
+      case 'number':
+        return { kind: 'number', value: Number(item.value) }
+    }
+  }, [items])
 
-  return {
-    sequence,
-    cueCount: sequence.length,
-    regenerate: buildSequence,
-  }
+  return { pickRandom, cueCount: items.length }
 }
